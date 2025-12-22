@@ -1,0 +1,19 @@
+## [Visual Studio]
+bin/
+obj/
+out/
+.vs/
+.vscode/
+
+## [User-specific files]
+*.user
+*.userosscache
+*.sln.docstates
+
+## [App settings]
+appsettings.Development.json
+
+## [Database]
+*.db
+*.mdf
+*.ldf
