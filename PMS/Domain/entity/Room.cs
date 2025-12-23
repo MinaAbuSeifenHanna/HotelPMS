@@ -1,4 +1,4 @@
-﻿using PMS.Domain.enums;
+﻿using PMS.Domain.enums.RoomEnums;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
@@ -9,20 +9,25 @@ namespace PMS.Domain.entity
         [Key]
         public int Id { get; set; }
 
-        [Required]
+        [Required, StringLength(10)]
         public string RoomNumber { get; set; } 
 
-        public string RoomType { get; set; } // Single, Double, Suite
+        [Required]
+        public RoomType Type { get; set; } // Enum
 
+        [Required]
+        public int Floor { get; set; } 
+
+        [Required]
         public decimal PricePerNight { get; set; }
 
-        public RoomStatus Status { get; set; } = RoomStatus.Available;
+        public RoomStatus Status { get; set; } = RoomStatus.Available; // Enum
 
-        // one-to-Many relationship with Reservation
-        // one room can have many reservations
+        // for optimistic concurrency control
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
 
-        [JsonIgnore]
-        public ICollection<Reservation>? Reservations { get; set; }
-       
+        // Relationships
+        public ICollection<Reservation> Reservations { get; set; }
     }
 }

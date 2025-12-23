@@ -1,42 +1,64 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using PMS.DTOs;
+using PMS.DTOs.Reservation;
 using PMS.Services;
 
 namespace PMS.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
+    [Route("api/[controller]")]
     public class ReservationsController : ControllerBase
     {
+        private readonly IReservationService _reservationService;
 
-        private readonly IReservationService _resService;
-
-        public ReservationsController(IReservationService resService)
+        public ReservationsController(IReservationService reservationService)
         {
-            _resService = resService;
+            _reservationService = reservationService;
         }
 
-        [HttpPost("check-in")]
-        public async Task<IActionResult> CheckIn([FromBody] CheckInDto dto)
+       
+        [HttpPost("create")]
+        public async Task<IActionResult> CreateReservation([FromBody] AddReservationDto dto)
         {
-            var result = await _resService.CheckInAsync(dto);
-            if (result.Contains("successfully"))
-                return Ok(result);
-
-            return BadRequest(result);
+            try
+            {
+                var reservationId = await _reservationService.CreateReservationAsync(dto);
+                return Ok(new { Message = "Reservation created successfully", Id = reservationId });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
         }
 
-
-        [HttpPut("check-out/{id}")]
-        public async Task<IActionResult> CheckOut(string roomNumber)
+      
+        [HttpPatch("check-in/{idNumber}")]
+        public async Task<IActionResult> CheckIn(string idNumber)
         {
-            var result = await _resService.CheckOutAsync(roomNumber);
+            try
+            {
+                await _reservationService.ProcessCheckInByIdNumberAsync(idNumber);
+                return Ok(new { Message = "Check-in successful. Room status updated to Occupied." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
+        }
 
-            if (result.Contains("not found"))
-                return NotFound(result);
-
-            return Ok(result);
+        [HttpPatch("check-out/{idNumber}")]
+        public async Task<IActionResult> CheckOut(string idNumber)
+        {
+            try
+            {
+                await _reservationService.ProcessCheckOutByIdNumberAsync(idNumber);
+                return Ok(new { Message = "Check-out successful. Room status updated to Cleaning." });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { Message = ex.Message });
+            }
         }
     }
 }

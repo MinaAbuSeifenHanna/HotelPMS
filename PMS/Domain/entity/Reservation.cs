@@ -1,4 +1,5 @@
 ﻿using PMS.Domain.enums;
+using PMS.Domain.enums.ReservationEnums;
 using System.ComponentModel.DataAnnotations;
 
 namespace PMS.Domain.entity
@@ -7,40 +8,33 @@ namespace PMS.Domain.entity
     {
         [Key]
         public int Id { get; set; }
-        //-------------------- Room Connection --------------------
-        // (Foreign Key)
-        [Required]
+
+        //  relationships 
+        public int GuestId { get; set; }
+        public Guest Guest { get; set; }
+
         public int RoomId { get; set; }
-        // Navigation Property
         public Room Room { get; set; }
 
-        //-------------------- Guest Connection --------------------
-
-        // (Foreign Key)
-        [Required]
-        public int GuestId { get; set; }
-
-        // Navigation Property
-        public Guest Guest { get; set; }
-        //-------------------- Reservation Details --------------------
+    
         public DateTime CheckInDate { get; set; }
+        public DateTime CheckOutDate { get; set; }
+        public int NumberOfGuests { get; set; }
 
-        // Nullable to allow for future check-outs
-        public DateTime? CheckOutDate { get; set; } 
+        // Companion
+        public ICollection<Companion> Companions { get; set; } = new List<Companion>();
 
-        public decimal TotalAmount { get; set; }
-        public bool IsCheckedOut { get; set; } = false;
+        //  calculation fields
+        public decimal TotalAmount { get; set; } 
+        public decimal DepositAmount { get; set; } 
+        public decimal RemainingBalance => TotalAmount - DepositAmount; 
 
+        public PaymentMethod PaymentMethod { get; set; }
+        public BookingSource BookingSource { get; set; }
+        public string? SpecialRequests { get; set; }
 
-        public ReservationStatus Status { get; set; } = ReservationStatus.Created;
-       
-
-
-
-
-
-
-
-
+        [Timestamp]
+        public byte[] RowVersion { get; set; }
+        public ReservationStatus Status { get; set; } = ReservationStatus.Confirmed;
     }
 }

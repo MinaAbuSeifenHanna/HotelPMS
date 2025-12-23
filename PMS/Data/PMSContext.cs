@@ -13,19 +13,35 @@ public class PMSContext : DbContext
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-     
+        //---- Guest Entity Configuration ----//
+        modelBuilder.Entity<Guest>()
+            .HasIndex(g => g.IdNumber)
+            .IsUnique();
+        modelBuilder.Entity<Guest>()
+            .HasIndex(g => g.Email)
+            .IsUnique();
+        //---- Room Entity Configuration ----//
         modelBuilder.Entity<Room>()
             .Property(r => r.PricePerNight)
-            .HasColumnType("decimal(18,2)");
+            .HasPrecision(18, 2);
+
         modelBuilder.Entity<Room>()
             .HasIndex(r => r.RoomNumber)
             .IsUnique();
-        modelBuilder.Entity<Guest>()
-        .HasIndex(g => g.NationalId)
-        .IsUnique();
+        //---- Reservation Entity Configuration ----//
 
         modelBuilder.Entity<Reservation>()
-            .Property(res => res.TotalAmount)
-            .HasColumnType("decimal(18,2)");
+         .Property(r => r.TotalAmount)
+         .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Reservation>()
+            .Property(r => r.DepositAmount)
+            .HasPrecision(18, 2);
+
+        modelBuilder.Entity<Companion>()
+        .HasOne(c => c.Reservation)      
+        .WithMany(r => r.Companions)     
+        .HasForeignKey(c => c.ReservationId) 
+        .OnDelete(DeleteBehavior.Cascade); 
     }
 }

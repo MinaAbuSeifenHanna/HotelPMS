@@ -1,7 +1,9 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using PMS.Domain.entity;
 using PMS.Domain.enums;
+using PMS.Domain.enums.RoomEnums;
 using PMS.DTOs;
+using PMS.DTOs.Reservation;
 using PMS.Services;
 
 public class ReservationService : IReservationService
@@ -13,99 +15,108 @@ public class ReservationService : IReservationService
         _context = context;
     }
 
-    public async Task<string> CheckInAsync(CheckInDto dto)
+    public async Task<int> CreateReservationAsync(AddReservationDto dto)
     {
-        // 1. get room by room number
+        // 1. check if room exists
+        var room = await _context.Rooms.FindAsync(dto.RoomId);
+        if (room == null) throw new Exception("The room does not exist");
 
-        var room = await _context.Rooms
-            .FirstOrDefaultAsync(r => r.RoomNumber == dto.RoomNumber);
-
-        // 2. check if room exists and is available
-
-        if (room == null)
-            return "Error: Room number not found in the system";
-
-        if (room.Status != RoomStatus.Available)
-            return $"Room  {dto.RoomNumber} Its status is currently {room.Status} It cannot be accommodated for guests.";
+        if (dto.CheckInDate.Date < DateTime.Now.Date)
+            throw new Exception("Reservations cannot be made for an older date.");
 
 
-        // 3. Is the guest listed or not?
+        // 2. calculate number of days between check-in and check-out
 
-        var guest = await _context.Guests
-            .FirstOrDefaultAsync(g => g.NationalId == dto.GuestNationalId);
+        var totalDays = (dto.CheckOutDate.Date - dto.CheckInDate.Date).Days;
+        if (totalDays <= 0) throw new Exception("The exit date must be after the entry date.");
 
-        if (guest == null)
-        {
-            guest = new Guest
-            {
-                FullName = dto.GuestName,
-                NationalId = dto.GuestNationalId,
-                Phone = dto.GuestPhone
-            };
-            _context.Guests.Add(guest);
-            await _context.SaveChangesAsync();
-        }
+        bool isRoomBusy = await _context.Reservations.AnyAsync(r =>
+       r.RoomId == dto.RoomId &&
+       r.Status != ReservationStatus.Cancelled && 
+       r.Status != ReservationStatus.CheckedOut && 
+       dto.CheckInDate < r.CheckOutDate && 
+       dto.CheckOutDate > r.CheckInDate); 
 
-        // 4. store in Reservation Table
+        if (isRoomBusy)
+            throw new Exception("Sorry, this room is already booked for the selected period.");
 
+
+
+        // 3. calculate total amount
+        var totalAmount = totalDays * room.PricePerNight;
+
+
+        // 4. create reservation entity
         var reservation = new Reservation
         {
-            RoomId = room.Id, 
-            GuestId = guest.Id,
-            CheckInDate = DateTime.Now,
-            Status = ReservationStatus.CheckedIn,
-            IsCheckedOut = false
+            GuestId = dto.GuestId,
+            RoomId = dto.RoomId,
+            CheckInDate = dto.CheckInDate,
+            CheckOutDate = dto.CheckOutDate,
+            NumberOfGuests = dto.NumberOfGuests,
+            TotalAmount = totalAmount,
+            DepositAmount = dto.DepositAmount,
+            PaymentMethod = dto.PaymentMethod,
+            BookingSource = dto.BookingSource,
+            SpecialRequests = dto.SpecialRequests,
+            Status = ReservationStatus.Confirmed,
+
+            //  Companions
+            Companions = dto.Companions?.Select(c => new Companion
+            {
+                FirstName = c.FirstName,
+                LastName = c.LastName,
+                Relationship = c.Relationship,
+                Age = c.Age
+            }).ToList() ?? new List<Companion>()
         };
 
-        // 5. updata Room Status
-
-        room.Status = RoomStatus.Occupied;
+        // 5. change room status to Reserved
+        room.Status = RoomStatus.Reserved;
 
         _context.Reservations.Add(reservation);
         await _context.SaveChangesAsync();
 
-        return $"successfully Checked In to Room {room.RoomNumber}";
+        return reservation.Id;
     }
 
-
-    public async Task<string> CheckOutAsync(string roomNumber)
+    
+    public async Task<bool> ProcessCheckInByIdNumberAsync(string idNumber)
     {
-        // 1. search for the room by room number
-        var room = await _context.Rooms.FirstOrDefaultAsync(r => r.RoomNumber == roomNumber);
-        if (room == null) return "The room number is incorrect";
-
-        // 2. check for active reservation
-
+        
         var reservation = await _context.Reservations
             .Include(r => r.Guest)
             .Include(r => r.Room)
-            .FirstOrDefaultAsync(r => r.RoomId == room.Id && r.IsCheckedOut == false);
+            .FirstOrDefaultAsync(r => r.Guest.IdNumber == idNumber && r.Status == ReservationStatus.Confirmed);
 
         if (reservation == null)
-            return $"There is currently no active booking for room number {roomNumber}.";
+            throw new Exception("There is no confirmed booking ready for accommodation with this national ID number.");
 
-        // 3.  calculate the invoice
-
-        var checkOutTime = DateTime.Now;
-        var stayDuration = (int)Math.Ceiling((checkOutTime - reservation.CheckInDate).TotalDays);
-        if (stayDuration <= 0) stayDuration = 1;
-
-        decimal totalInvoice = stayDuration * room.PricePerNight;
-
-        // 4. close the reservation
-
-        reservation.CheckOutDate = checkOutTime;
-        reservation.Status = ReservationStatus.CheckedOut;
-        reservation.IsCheckedOut = true;
-        reservation.TotalAmount = totalInvoice;
-
-        // 5. room status to dirty
-        room.Status = RoomStatus.Dirty;
+        
+        reservation.Status = ReservationStatus.CheckedIn;
+        reservation.Room.Status = RoomStatus.Occupied;
 
         await _context.SaveChangesAsync();
-
-        return $" Check-out from the room {roomNumber} Successfully ,  guest : {reservation.Guest?.FullName} Accommodation : {stayDuration} day , The account : {totalInvoice} $.";
+        return true;
     }
 
+
+    public async Task<bool> ProcessCheckOutByIdNumberAsync(string idNumber)
+    {
+  
+        var reservation = await _context.Reservations
+            .Include(r => r.Guest)
+            .Include(r => r.Room)
+            .FirstOrDefaultAsync(r => r.Guest.IdNumber == idNumber && r.Status == ReservationStatus.CheckedIn);
+
+        if (reservation == null)
+            throw new Exception("There is currently no resident with this national ID number.");
+
+        reservation.Status = ReservationStatus.CheckedOut;
+        reservation.Room.Status = RoomStatus.Cleaning;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
 
 }
