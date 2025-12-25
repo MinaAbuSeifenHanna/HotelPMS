@@ -1,10 +1,9 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿
+
 using Microsoft.AspNetCore.Mvc;
-using PMS.Domain.entity;
+using PMS.Application.Services;
 using PMS.Domain.enums.RoomEnums;
-using PMS.DTOs;
 using PMS.DTOs.Room;
-using PMS.Services;
 
 namespace PMS.Controllers
 {

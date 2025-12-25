@@ -1,0 +1,16 @@
+﻿
+
+namespace PMS.Domain.Entites
+{
+    public class Companion
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public string Relationship { get; set; }
+        public int Age { get; set; }
+
+        public int ReservationId { get; set; }
+        public Reservation Reservation { get; set; }
+    }
+}

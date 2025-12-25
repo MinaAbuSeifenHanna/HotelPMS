@@ -1,7 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿
+
 using Microsoft.AspNetCore.Mvc;
-using PMS.DTOs.Guest;
-using PMS.Services;
+using PMS.Application.DTOs.Guest;
+using PMS.Application.Services;
 
 namespace PMS.Controllers
 {

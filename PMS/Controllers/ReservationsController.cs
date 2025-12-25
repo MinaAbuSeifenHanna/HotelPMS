@@ -1,8 +1,8 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿
+
 using Microsoft.AspNetCore.Mvc;
-using PMS.DTOs;
-using PMS.DTOs.Reservation;
-using PMS.Services;
+using PMS.Application.DTOs.Reservation;
+using PMS.Application.Services;
 
 namespace PMS.Controllers
 {
