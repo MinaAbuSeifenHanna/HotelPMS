@@ -1,7 +1,6 @@
-﻿
-using PMS.Domain.Enums.GuestEnums;
+﻿using PMS.Domain.Enums.GuestEnums;
 
-namespace PMS.Application.DTOs.Guest
+namespace PMS.Application.Features.Guests.DTOs
 {
     public class AddGuestDto
     {

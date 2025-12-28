@@ -1,6 +1,4 @@
-﻿
-
-using PMS.Application.DTOs.Reservation;
+﻿using PMS.Application.Features.Reservations;
 
 namespace PMS.Application.Services
 {

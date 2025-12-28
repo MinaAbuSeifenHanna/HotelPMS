@@ -1,6 +1,6 @@
 ﻿
+using PMS.Application.Features.Rooms;
 using PMS.Domain.enums.RoomEnums;
-using PMS.DTOs.Room;
 
 namespace PMS.Application.Services
 {
@@ -20,6 +20,6 @@ namespace PMS.Application.Services
         // 9 & 10: search rooms by number and type
         Task<IEnumerable<RoomResultDto>> SearchRoomsAsync(string? roomNumber, RoomType? type);
 
-      
+
     }
 }

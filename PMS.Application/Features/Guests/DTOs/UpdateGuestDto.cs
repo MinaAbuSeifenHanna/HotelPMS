@@ -1,4 +1,4 @@
-﻿namespace PMS.Application.DTOs.Guest
+﻿namespace PMS.Application.Features.Guests.DTOs
 {
   public class UpdateGuestDto
   {

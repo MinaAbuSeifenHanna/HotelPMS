@@ -1,7 +1,7 @@
 ﻿using PMS.Domain.enums.RoomEnums;
 using System.ComponentModel.DataAnnotations;
 
-namespace PMS.DTOs.Room
+namespace PMS.Application.Features.Rooms
 {
     public class AddRoomDto
     {

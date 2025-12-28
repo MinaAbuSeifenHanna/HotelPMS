@@ -1,64 +1,64 @@
 ﻿
 
-using Microsoft.AspNetCore.Mvc;
-using PMS.Application.DTOs.Reservation;
-using PMS.Application.Services;
+// using Microsoft.AspNetCore.Mvc;
+// using PMS.Application.DTOs.Reservation;
+// using PMS.Application.Services;
 
-namespace PMS.Controllers
-{
-    [ApiController]
-    [Route("api/[controller]")]
-    public class ReservationsController : ControllerBase
-    {
-        private readonly IReservationService _reservationService;
+// namespace PMS.Controllers
+// {
+//     [ApiController]
+//     [Route("api/[controller]")]
+//     public class ReservationsController : ControllerBase
+//     {
+//         private readonly IReservationService _reservationService;
 
-        public ReservationsController(IReservationService reservationService)
-        {
-            _reservationService = reservationService;
-        }
+//         public ReservationsController(IReservationService reservationService)
+//         {
+//             _reservationService = reservationService;
+//         }
 
        
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateReservation([FromBody] AddReservationDto dto)
-        {
-            try
-            {
-                var reservationId = await _reservationService.CreateReservationAsync(dto);
-                return Ok(new { Message = "Reservation created successfully", Id = reservationId });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
-        }
+//         [HttpPost("create")]
+//         public async Task<IActionResult> CreateReservation([FromBody] AddReservationDto dto)
+//         {
+//             try
+//             {
+//                 var reservationId = await _reservationService.CreateReservationAsync(dto);
+//                 return Ok(new { Message = "Reservation created successfully", Id = reservationId });
+//             }
+//             catch (Exception ex)
+//             {
+//                 return BadRequest(new { Message = ex.Message });
+//             }
+//         }
 
       
-        [HttpPatch("check-in/{idNumber}")]
-        public async Task<IActionResult> CheckIn(string idNumber)
-        {
-            try
-            {
-                await _reservationService.ProcessCheckInByIdNumberAsync(idNumber);
-                return Ok(new { Message = "Check-in successful. Room status updated to Occupied." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
-        }
+//         [HttpPatch("check-in/{idNumber}")]
+//         public async Task<IActionResult> CheckIn(string idNumber)
+//         {
+//             try
+//             {
+//                 await _reservationService.ProcessCheckInByIdNumberAsync(idNumber);
+//                 return Ok(new { Message = "Check-in successful. Room status updated to Occupied." });
+//             }
+//             catch (Exception ex)
+//             {
+//                 return BadRequest(new { Message = ex.Message });
+//             }
+//         }
 
-        [HttpPatch("check-out/{idNumber}")]
-        public async Task<IActionResult> CheckOut(string idNumber)
-        {
-            try
-            {
-                await _reservationService.ProcessCheckOutByIdNumberAsync(idNumber);
-                return Ok(new { Message = "Check-out successful. Room status updated to Cleaning." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(new { Message = ex.Message });
-            }
-        }
-    }
-}
+//         [HttpPatch("check-out/{idNumber}")]
+//         public async Task<IActionResult> CheckOut(string idNumber)
+//         {
+//             try
+//             {
+//                 await _reservationService.ProcessCheckOutByIdNumberAsync(idNumber);
+//                 return Ok(new { Message = "Check-out successful. Room status updated to Cleaning." });
+//             }
+//             catch (Exception ex)
+//             {
+//                 return BadRequest(new { Message = ex.Message });
+//             }
+//         }
+//     }
+// }

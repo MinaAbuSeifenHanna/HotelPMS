@@ -1,4 +1,4 @@
-﻿namespace PMS.Application.DTOs.Reservation
+﻿namespace PMS.Application.Features.Reservations
 {
     public class AddCompanionDto
     {

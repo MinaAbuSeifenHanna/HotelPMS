@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using PMS.Domain.Enums.ReservationEnums;
 
-namespace PMS.Application.DTOs.Reservation
+namespace PMS.Application.Features.Reservations
 {
     public class AddReservationDto
     {

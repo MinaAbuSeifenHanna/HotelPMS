@@ -8,12 +8,18 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PMS.Domain\PMS.Domain.csproj" />
-    <ProjectReference Include="..\PMS.Infrastructure\PMS.Infrastructure.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="AutoMapper.Extensions.Microsoft.DependencyInjection" Version="12.0.1" />
     <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="12.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Common\" />
+    <Folder Include="Features\Guests\Mappings\" />
+    <Folder Include="Features\Guests\Validators\" />
+    <Folder Include="Validations\" />
   </ItemGroup>
 
 </Project>

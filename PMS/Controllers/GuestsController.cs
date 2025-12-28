@@ -1,12 +1,12 @@
 ﻿
 
 using Microsoft.AspNetCore.Mvc;
-using PMS.Application.DTOs.Guest;
+using PMS.Application.Features.Guests.DTOs;
 using PMS.Application.Services;
 
 namespace PMS.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/[controller]/[action]")]
     [ApiController]
     public class GuestsController : ControllerBase
     {
@@ -17,54 +17,44 @@ namespace PMS.Controllers
             _guestService = guestService;
         }
 
-        [HttpPost("add-new-guest")]
+        [HttpPost]
         public async Task<IActionResult> AddNewGuest([FromBody] AddGuestDto dto)
         {
-            if (!ModelState.IsValid) return BadRequest(ModelState);
-
-            var guestId = await _guestService.AddGuestAsync(dto);
-            return Ok(new { Message = "The guest was added successfully.", GuestId = guestId });
+            var result = await _guestService.AddGuestAsync(dto);
+            if (!result.IsSuccess) return BadRequest(result.Message);
+            return Ok(new { id = result.Data, result.Message });
         }
-
 
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<IActionResult> GetAll([FromQuery] string? search = null, [FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
         {
-            var guests = await _guestService.GetAllGuestsAsync();
-            return Ok(guests);
+            var result = await _guestService.GetAllGuestsAsync(search, pageNumber, pageSize);
+            if (!result.IsSuccess) return BadRequest(result.Message);
+            return Ok(new { result.Data, result.Message });
         }
 
-        [HttpGet("search/{idNumber}")]
+        [HttpGet("{idNumber}")]
         public async Task<IActionResult> GetById(string idNumber)
         {
-            var guest = await _guestService.GetGuestByIdAsync(idNumber);
-            if (guest == null) return NotFound("The guest is not present");
-            return Ok(guest);
+            var result = await _guestService.GetGuestByNumberIdAsync(idNumber);
+            if (!result.IsSuccess) return BadRequest(result.Message);
+            return Ok(result.Data);
         }
 
-        [HttpPut("update/{idNumber}")]
-        public async Task<IActionResult> Update(String idNumber, [FromBody] UpdateGuestDto dto)
+        [HttpPut("{idNumber}")]
+        public async Task<IActionResult> Update(string idNumber, [FromBody] UpdateGuestDto dto)
         {
             var result = await _guestService.UpdateGuestAsync(idNumber, dto);
-            if (!result) return BadRequest("Data update failed");
-            return Ok("Updated successfully");
+            if (!result.IsSuccess) return BadRequest(result.Message);
+            return Ok(result.Message);
         }
 
-        // delete guest
-        [HttpDelete("delete-by-idnumber/{idNumber}")]
+        [HttpDelete("{idNumber}")]
         public async Task<IActionResult> Delete(string idNumber)
         {
-            try
-            {
-                var result = await _guestService.DeleteGuestByIdNumberAsync(idNumber);
-                if (!result) return NotFound($"No guest is registered with ID number: {idNumber}");
-
-                return Ok(new { message = "The guest's data has been permanently deleted." });
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            var result = await _guestService.DeleteGuestAsync(idNumber);
+            if (!result.IsSuccess) return NotFound(result.Message);
+            return Ok(new { message = "The guest's data has been permanently deleted." });
         }
 
 

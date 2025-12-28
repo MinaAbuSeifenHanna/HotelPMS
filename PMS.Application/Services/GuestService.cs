@@ -1,128 +1,131 @@
 ﻿
 using PMS.Domain.Entites;
-
-using Microsoft.EntityFrameworkCore;
-using PMS.Application.DTOs.Guest;
+using PMS.Application.Abstractions;
+using PMS.Application.Features.Guests.DTOs;
+using PMS.Application.Common;
+using AutoMapper;
+using System.Linq.Expressions;
 
 
 namespace PMS.Application.Services
 {
     public class GuestService : IGuestService
     {
-        private readonly PMSContext _context;
-        public GuestService(PMSContext context) => _context = context;
-
-        public async Task<int> AddGuestAsync(AddGuestDto dto)
+        private readonly IRepository<Guest> _guestRepos;
+        private readonly IUnitOfWork _unitOfWork;
+        private readonly IMapper _mapper;
+        public GuestService(IRepository<Guest> guestRepos, IMapper mapper, IUnitOfWork unitOfWork)
         {
-            var existingGuest = await _context.Guests
-            .AnyAsync(g => g.Email == dto.Email || g.IdNumber == dto.IdNumber);
+            _guestRepos = guestRepos;
+            _mapper = mapper;
+            _unitOfWork = unitOfWork;
+        }
+        public async Task<Result<GuestResultDto>> GetGuestByIdAsync(int guestId)
+        {
+            var guest = await _guestRepos.GetByIdAsync(guestId);
+            if (guest == null) return Result<GuestResultDto>.Failure("Guest not found");
 
+            var dto = _mapper.Map<GuestResultDto>(guest);
+            return Result<GuestResultDto>.Success(dto);
+        }
+        public async Task<Result<GuestResultDto>> GetGuestByNumberIdAsync(string idNumber)
+        {
+            var guest = _guestRepos.Find(g => g.IdNumber == idNumber).FirstOrDefault();
+            if (guest == null) return Result<GuestResultDto>.Failure("Guest not found");
+
+            var dto = _mapper.Map<GuestResultDto>(guest);
+            return Result<GuestResultDto>.Success(dto);
+        }
+
+        public async Task<Result<int>> AddGuestAsync(AddGuestDto dto)
+        {
+
+            var existingGuest = await _guestRepos.ExistsAsync(g =>
+                                 g.Email == dto.Email || g.IdNumber == dto.IdNumber);
             if (existingGuest)
             {
-                throw new Exception("This guest is already registered in the system.");
+                return Result<int>.Failure("This guest is already registered in the system.");
             }
-            var guest = new Guest
+            var guest = _mapper.Map<Guest>(dto);
+
+            await _guestRepos.AddAsync(guest);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<int>.Success(guest.Id, "Guest created successfully.");
+        }
+
+        public async Task<Result<IReadOnlyList<GuestResultDto>>> GetAllGuestsAsync(string? search = null, int pageNumber = 1, int pageSize = 10)
+        {
+            Expression<Func<Guest, bool>>? predicate = null;
+            if (!string.IsNullOrEmpty(search))
             {
-                FirstName = dto.FirstName,
-                LastName = dto.LastName,
-                DateOfBirth = dto.DateOfBirth,
-                Nationality = dto.Nationality,
-                Email = dto.Email,
-                Phone = dto.Phone,
-                IdType = dto.IdType,
-                IdNumber = dto.IdNumber,
-                StreetAddress = dto.StreetAddress,
-                City = dto.City,
-                Country = dto.Country,
-                PostalCode = dto.PostalCode,
-                EmergencyContactName = dto.EmergencyContactName,
-                EmergencyContactPhone = dto.EmergencyContactPhone,
-                GuestPreferences = dto.GuestPreferences,
-                //   IsVip = dto.IsVip
-            };
-
-            _context.Guests.Add(guest);
-            await _context.SaveChangesAsync();
-            return guest.Id;
-        }
-
-        public async Task<IEnumerable<GuestResultDto>> GetAllGuestsAsync()
-        {
-            return await _context.Guests
-                .Select(g => new GuestResultDto
-                {
-                    Id = g.Id,
-                    FirstName = g.FirstName,
-                    LastName = g.LastName,
-                    Email = g.Email,
-                    Phone = g.Phone,
-                    IdNumber = g.IdNumber,
-                    Nationality = g.Nationality,
-                    //      IsVip = g.IsVip
-                }).ToListAsync();
-        }
-
-        public async Task<GuestResultDto> GetGuestByIdAsync(string idNumber)
-        {
-            var g = await _context.Guests
-                .FirstOrDefaultAsync(guest => guest.IdNumber == idNumber);
-            if (g == null) return null;
-
-            return new GuestResultDto
-            {
-                Id = g.Id,
-                FirstName = g.FirstName,
-                LastName = g.LastName,
-                Email = g.Email,
-                Phone = g.Phone,
-                IdNumber = g.IdNumber,
-                Nationality = g.Nationality,
-                //  IsVip = g.IsVip
-            };
-        }
-
-        public async Task<bool> UpdateGuestAsync(string idNumber, UpdateGuestDto dto)
-        {
-
-            var guest = await _context.Guests
-                .FirstOrDefaultAsync(guest => guest.IdNumber == idNumber);
-            if (guest == null) return false;
-
-
-            guest.FirstName = dto.FirstName;
-            guest.LastName = dto.LastName;
-            guest.Email = dto.Email;
-            guest.Phone = dto.Phone;
-            guest.StreetAddress = dto.StreetAddress;
-            guest.City = dto.City;
-            //    guest.IsVip = dto.IsVip;
-
-            await _context.SaveChangesAsync();
-            return true;
-        }
-
-        // delete guest by id number
-        public async Task<bool> DeleteGuestByIdNumberAsync(string idNumber)
-        {
-
-            var guest = await _context.Guests
-                .Include(g => g.Reservations)
-                .FirstOrDefaultAsync(g => g.IdNumber == idNumber);
-
-            if (guest == null) return false;
-
-
-            if (guest.Reservations.Any())
-            {
-                throw new Exception("Sorry, this guest is linked to registered reservations and cannot be removed from the system.");
+                string normalizedSearch = search.Trim().ToLower();
+                predicate = g => g.FirstName.ToLower().Contains(normalizedSearch) ||
+                                 g.LastName.ToLower().Contains(normalizedSearch) ||
+                                 g.Email.ToLower().Contains(normalizedSearch) ||
+                                 g.IdNumber.Contains(search);
             }
-
-            _context.Guests.Remove(guest);
-            await _context.SaveChangesAsync();
-            return true;
+            var guests = await _guestRepos.GetAllAsync(predicate, pageNumber, pageSize);
+            if (guests == null || !guests.Any())
+            {
+                return Result<IReadOnlyList<GuestResultDto>>.Failure("No guests found.");
+            }
+            var guestDtos = _mapper.Map<IReadOnlyList<GuestResultDto>>(guests);
+            return Result<IReadOnlyList<GuestResultDto>>.Success(guestDtos);
         }
 
-        // vip guest list
+        public async Task<Result<string>> UpdateGuestAsync(string idNumber, UpdateGuestDto dto)
+        {
+
+            var guest = _guestRepos.Find(g => g.IdNumber == idNumber).FirstOrDefault();
+
+            if (guest == null)
+                return Result<string>.Failure("Guest not found.");
+
+            // Check email uniqueness (excluding current guest)
+            var emailExists = await _guestRepos.ExistsAsync(g =>
+                g.Email == dto.Email && g.IdNumber != idNumber);
+
+            if (emailExists)
+                return Result<string>.Failure("Another guest already uses this email.");
+            _mapper.Map(dto, guest);
+
+            _guestRepos.Update(guest);
+            await _unitOfWork.SaveChangesAsync();
+
+            return Result<string>.Success("Guest updated successfully.");
+        }
+
+        // // delete guest by id number
+        public async Task<Result<string>> DeleteGuestAsync(string idNumber)
+        {
+            await _unitOfWork.BeginTransactionAsync();
+
+            try
+            {
+                var guest = _guestRepos
+                    .Find(g => g.IdNumber == idNumber)
+                    .FirstOrDefault();
+
+                if (guest == null)
+                    return Result<string>.Failure("Guest not found.");
+
+                _guestRepos.Delete(guest);
+                await _unitOfWork.SaveChangesAsync();
+
+                await _unitOfWork.CommitAsync();
+
+                return Result<string>.Success("Guest deleted successfully.");
+            }
+            catch (Exception)
+            {
+                await _unitOfWork.RollbackAsync();
+                return Result<string>.Failure("Failed to delete guest.");
+            }
+        }
+
+
+        // // vip guest list
 
         //public async Task<IEnumerable<GuestResultDto>> GetVipGuestsAsync()
         //{
