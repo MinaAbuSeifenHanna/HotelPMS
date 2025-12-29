@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System.Linq.Expressions;
+using Microsoft.EntityFrameworkCore;
 using PMS.Core.Domain.Interfaces;
 
 namespace PMS.Core.Infrastructure.RepoIMP
@@ -12,6 +13,39 @@ namespace PMS.Core.Infrastructure.RepoIMP
         {
             _context = context;
             _dbSet = context.Set<T>();
+        }
+        public async Task<IReadOnlyList<T>> GetAllWithIncludesAsync(Expression<Func<T, bool>>? predicate = null,
+            params Expression<Func<T, object>>[] includes)
+        {
+            var query = _dbSet.AsNoTracking().AsQueryable();
+
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+            return await query.ToListAsync();
+        }
+        public async Task<T?> GetByIdWithIncludesAsync(Expression<Func<T, bool>>? predicate = null,
+        params Expression<Func<T, object>>[] includes)
+        {
+            var query = _dbSet.AsNoTracking().AsQueryable();
+            if (predicate != null)
+            {
+                query = query.Where(predicate);
+            }
+            foreach (var include in includes)
+            {
+                query = query.Include(include);
+            }
+            return await query.FirstOrDefaultAsync();
+        }
+        public async Task<bool> ExistsAsync(Expression<Func<T, bool>> predicate)
+        {
+            return await _dbSet.AnyAsync(predicate);
         }
 
         public async Task<T?> GetByIdAsync(int id)

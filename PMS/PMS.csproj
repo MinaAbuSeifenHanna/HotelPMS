@@ -22,6 +22,30 @@
     <Folder Include="Features\Reservation\Infrastructure\Data\" />
     <Folder Include="Features\RoomServiceRequest\Infrastructure\Data\" />
     <Folder Include="Features\Room\Infrastructure\Data\" />
+    <Folder Include="Features\SPA\SpaBookings\Application\DTOS\" />
+    <Folder Include="Features\SPA\SpaBookings\Application\Services\" />
+    <Folder Include="Features\SPA\SpaBookings\Domain\IRepositry\" />
+    <Folder Include="Features\SPA\SpaBookings\Infrastructure\RepositoriesIMP\" />
+    <Folder Include="Features\SPA\SpaBookings\Presentation\" />
+    <Folder Include="Features\SPA\SpaRooms\Application\DTOS\" />
+    <Folder Include="Features\SPA\SpaRooms\Application\Services\" />
+    <Folder Include="Features\SPA\SpaRooms\Domain\IRepositry\" />
+    <Folder Include="Features\SPA\SpaRooms\Presentation\" />
+    <Folder Include="Features\SPA\SpaServices\" />
+    <Folder Include="Features\SPA\SpaServices\Application\" />
+    <Folder Include="Features\SPA\SpaServices\Application\DTOS\" />
+    <Folder Include="Features\SPA\SpaServices\Application\Services\" />
+    <Folder Include="Features\SPA\SpaServices\Domain\Enums\" />
+    <Folder Include="Features\SPA\SpaServices\Domain\IRepositry\" />
+    <Folder Include="Features\SPA\SpaServices\Infrastructure\" />
+    <Folder Include="Features\SPA\SpaServices\Infrastructure\RepositoriesIMP\" />
+    <Folder Include="Features\SPA\SpaServices\Presentation\" />
+    <Folder Include="Features\SPA\SpaTherapists\Application\DTOS\" />
+    <Folder Include="Features\SPA\SpaTherapists\Application\Services\" />
+    <Folder Include="Features\SPA\SpaTherapists\Domain\Enums\" />
+    <Folder Include="Features\SPA\SpaTherapists\Domain\IRepositry\" />
+    <Folder Include="Features\SPA\SpaTherapists\Infrastructure\RepositoriesIMP\" />
+    <Folder Include="Features\SPA\SpaTherapists\Presentation\" />
   </ItemGroup>
 
 </Project>

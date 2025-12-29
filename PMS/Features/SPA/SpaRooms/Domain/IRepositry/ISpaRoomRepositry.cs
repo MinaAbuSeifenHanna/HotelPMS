@@ -1,0 +1,10 @@
+using System;
+using PMS.Core.Domain.Interfaces;
+using PMS.Features.SPA.SpaServices.Domain.Entities;
+
+namespace PMS.Features.SPA.SpaRooms.Domain.IRepositry;
+
+public interface ISpaRoomRepositry:IRepository<SpaRoom>
+{
+
+}

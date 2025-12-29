@@ -13,6 +13,7 @@ using PMS.Features.Rooms.Infrastructure.RepositoriesIMP;
 using PMS.Features.RoomServiceRequests.Application.Services;
 using PMS.Features.RoomServiceRequests.Domain.IRepositories;
 using PMS.Features.RoomServiceRequests.Infrastructure;
+using PMS.Features.SPA;
 
 
 
@@ -46,6 +47,9 @@ builder.Services.AddScoped<IRoomService, RoomService>();
 builder.Services.AddScoped<IGuestService, GuestService>();
 builder.Services.AddScoped<IReservationService, ReservationService>();
 builder.Services.AddScoped<IHousekeepingService, HousekeepingService>();
+
+//SPA
+builder.Services.AddSpaDependencies();
 
 ///////
 // add ReservationService
